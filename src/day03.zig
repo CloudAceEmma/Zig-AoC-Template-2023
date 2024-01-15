@@ -411,7 +411,6 @@ fn addAllSum(gears: *std.ArrayList(Gear), sum: *usize, arena: *std.heap.ArenaAll
     var map_aster = std.AutoHashMap(Asterisk, void).init(arena.allocator());
     defer map_aster.deinit();
     for (asterisks.items) |aster| {
-        std.debug.print("{any}\n", .{aster});
         try map_aster.put(aster, {});
     }
     var buf: [2]u32 = undefined;
@@ -502,7 +501,7 @@ fn sumGearRatio(p: Position, index: usize, array: std.ArrayList([]u8), gears: *s
                                 if (asterisks.items.len > old_len) {
                                     try gears.append(.{
                                         .value = part_num,
-                                        .asterisk = asterisks.items[old_len..],
+                                        .asterisk = try arena.allocator().dupe(Asterisk, asterisks.items[old_len..]),
                                     });
                                 }
                             }
@@ -525,7 +524,7 @@ fn sumGearRatio(p: Position, index: usize, array: std.ArrayList([]u8), gears: *s
                             if (asterisks.items.len > old_len) {
                                 try gears.append(.{
                                     .value = part_num,
-                                    .asterisk = asterisks.items[old_len..],
+                                    .asterisk = try arena.allocator().dupe(Asterisk, asterisks.items[old_len..]),
                                 });
                                 old_len = asterisks.items.len;
                             }
@@ -604,7 +603,7 @@ fn sumGearRatio(p: Position, index: usize, array: std.ArrayList([]u8), gears: *s
                                 if (asterisks.items.len > old_len) {
                                     try gears.append(.{
                                         .value = part_num,
-                                        .asterisk = asterisks.items[old_len..],
+                                        .asterisk = try arena.allocator().dupe(Asterisk, asterisks.items[old_len..]),
                                     });
                                 }
                             }
@@ -627,12 +626,8 @@ fn sumGearRatio(p: Position, index: usize, array: std.ArrayList([]u8), gears: *s
                             if (asterisks.items.len > old_len) {
                                 try gears.append(.{
                                     .value = part_num,
-                                    .asterisk = asterisks.items[old_len..],
+                                    .asterisk = try arena.allocator().dupe(Asterisk, asterisks.items[old_len..]),
                                 });
-                                for (gears.items) |cur| {
-                                    std.debug.print("{any}\n", .{cur.asterisk});
-                                }
-                                std.debug.print("\n", .{});
                                 old_len = asterisks.items.len;
                             }
                         }
@@ -696,7 +691,7 @@ fn sumGearRatio(p: Position, index: usize, array: std.ArrayList([]u8), gears: *s
                                 if (asterisks.items.len > old_len) {
                                     try gears.append(.{
                                         .value = part_num,
-                                        .asterisk = asterisks.items[old_len..],
+                                        .asterisk = try arena.allocator().dupe(Asterisk, asterisks.items[old_len..]),
                                     });
                                 }
                             }
@@ -719,7 +714,7 @@ fn sumGearRatio(p: Position, index: usize, array: std.ArrayList([]u8), gears: *s
                             if (asterisks.items.len > old_len) {
                                 try gears.append(.{
                                     .value = part_num,
-                                    .asterisk = asterisks.items[old_len..],
+                                    .asterisk = try arena.allocator().dupe(Asterisk, asterisks.items[old_len..]),
                                 });
                                 old_len = asterisks.items.len;
                             }
