@@ -10,7 +10,10 @@ const gpa = util.gpa;
 
 const data = @embedFile("data/day05.txt");
 
-pub fn main() !void {}
+pub fn main() !void {
+    const part_one = try lowLoca(data);
+    std.debug.print("part_one={d}\n", .{part_one});
+}
 
 const CategoryMap = struct {
     destination: usize,
@@ -29,7 +32,7 @@ const CategoryEnum = enum {
     location,
 };
 
-fn lowLoca(doc: []const u8) !void {
+fn lowLoca(doc: []const u8) !usize {
     var stream = std.io.fixedBufferStream(doc);
     var buf: [1024]u8 = undefined;
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -39,8 +42,7 @@ fn lowLoca(doc: []const u8) !void {
     var seeds: [1024]usize = undefined;
     var seed_index: usize = 0;
     var index: usize = 1;
-    const min_loca: usize = std.math.maxInt(usize);
-    _ = min_loca;
+    var min_loca: usize = std.math.maxInt(usize);
     while (true) {
         const line_maybe = try stream.reader().readUntilDelimiterOrEof(&buf, '\n');
         if (line_maybe) |line| {
@@ -84,7 +86,7 @@ fn lowLoca(doc: []const u8) !void {
                         .destination = try std.fmt.parseInt(usize, it_water.next().?, 10),
                         .source = try std.fmt.parseInt(usize, it_water.next().?, 10),
                         .range = try std.fmt.parseInt(usize, it_water.next().?, 10),
-                        .kind = .fertilizer,
+                        .kind = .water,
                     });
                 },
                 5 => {
@@ -93,7 +95,7 @@ fn lowLoca(doc: []const u8) !void {
                         .destination = try std.fmt.parseInt(usize, it_light.next().?, 10),
                         .source = try std.fmt.parseInt(usize, it_light.next().?, 10),
                         .range = try std.fmt.parseInt(usize, it_light.next().?, 10),
-                        .kind = .fertilizer,
+                        .kind = .light,
                     });
                 },
                 6 => {
@@ -102,7 +104,7 @@ fn lowLoca(doc: []const u8) !void {
                         .destination = try std.fmt.parseInt(usize, it_temp.next().?, 10),
                         .source = try std.fmt.parseInt(usize, it_temp.next().?, 10),
                         .range = try std.fmt.parseInt(usize, it_temp.next().?, 10),
-                        .kind = .fertilizer,
+                        .kind = .temperature,
                     });
                 },
                 7 => {
@@ -111,7 +113,7 @@ fn lowLoca(doc: []const u8) !void {
                         .destination = try std.fmt.parseInt(usize, it_humi.next().?, 10),
                         .source = try std.fmt.parseInt(usize, it_humi.next().?, 10),
                         .range = try std.fmt.parseInt(usize, it_humi.next().?, 10),
-                        .kind = .fertilizer,
+                        .kind = .humidity,
                     });
                 },
                 8 => {
@@ -120,7 +122,7 @@ fn lowLoca(doc: []const u8) !void {
                         .destination = try std.fmt.parseInt(usize, it_loca.next().?, 10),
                         .source = try std.fmt.parseInt(usize, it_loca.next().?, 10),
                         .range = try std.fmt.parseInt(usize, it_loca.next().?, 10),
-                        .kind = .fertilizer,
+                        .kind = .location,
                     });
                 },
                 else => {},
@@ -129,7 +131,7 @@ fn lowLoca(doc: []const u8) !void {
             break;
         }
     }
-    for (0..index) |i_seed| {
+    for (0..seed_index) |i_seed| {
         var before: CategoryEnum = .soil;
         var curr: CategoryEnum = .soil;
         var is_map: bool = false;
@@ -139,22 +141,23 @@ fn lowLoca(doc: []const u8) !void {
             curr = item.kind;
             if (curr == before) {
                 if ((curr_num >= item.source) and (curr_num <= item.source + item.range - 1) and (!is_map)) {
-                    curr_num = item.destination + (seed - item.source);
+                    curr_num = item.destination + (curr_num - item.source);
                     is_map = true;
                 }
             } else {
-                std.debug.print("{any}\n", .{curr});
-                std.debug.print("{any}\n", .{before});
-                std.debug.print("{d}\n", .{curr_num});
                 is_map = false;
+                if ((curr_num >= item.source) and (curr_num <= item.source + item.range - 1) and (!is_map)) {
+                    curr_num = item.destination + (curr_num - item.source);
+                    is_map = true;
+                }
             }
             before = curr;
         }
-        break;
-        //  if (curr_num < min_loca) {
-        //      min_loca = curr_num;
-        //  }
+        if (curr_num <= min_loca) {
+            min_loca = curr_num;
+        }
     }
+    return min_loca;
 }
 
 test "part one example" {
@@ -193,7 +196,7 @@ test "part one example" {
         \\60 56 37
         \\56 93 4
     ;
-    try lowLoca(doc);
+    try std.testing.expect(try lowLoca(doc) == 35);
 }
 
 // Useful stdlib functions
