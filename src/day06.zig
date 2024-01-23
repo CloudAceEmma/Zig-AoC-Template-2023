@@ -13,6 +13,8 @@ const data = @embedFile("data/day06.txt");
 pub fn main() !void {
     const part_one = try multiWays(data);
     std.debug.print("part_one={d}\n", .{part_one});
+    const part_tow = try multiWaysOne(data);
+    std.debug.print("part_tow={d}\n", .{part_tow});
 }
 
 fn multiWays(doc: []const u8) !usize {
@@ -66,6 +68,50 @@ fn multiWays(doc: []const u8) !usize {
     return multi;
 }
 
+fn multiWaysOne(doc: []const u8) !usize {
+    var buf: [1024]u8 = undefined;
+    var stream = std.io.fixedBufferStream(doc);
+    var time: usize = 0;
+    var distance: usize = 0;
+    var is_time_line = true;
+    var time_buf: [1024]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&time_buf);
+    while (true) {
+        const line_maybe = try stream.reader().readUntilDelimiterOrEof(&buf, '\n');
+        if (line_maybe) |line| {
+            if (is_time_line) {
+                is_time_line = false;
+                var it_time = std.mem.tokenizeScalar(u8, std.mem.trimLeft(u8, line, "Time:      "), ' ');
+                var time_array = std.ArrayList([]const u8).init(fba.allocator());
+                defer time_array.deinit();
+                while (it_time.next()) |ti| {
+                    try time_array.appendSlice(&[_][]const u8{ti});
+                }
+                const time_str = try std.mem.concat(fba.allocator(), u8, time_array.items);
+                time = try std.fmt.parseInt(usize, time_str, 10);
+            } else {
+                var it_distance = std.mem.tokenizeScalar(u8, std.mem.trimLeft(u8, line, "Distance:  "), ' ');
+                var distance_array = std.ArrayList([]const u8).init(fba.allocator());
+                defer distance_array.deinit();
+                while (it_distance.next()) |di| {
+                    try distance_array.appendSlice(&[_][]const u8{di});
+                }
+                const distance_str = try std.mem.concat(fba.allocator(), u8, distance_array.items);
+                distance = try std.fmt.parseInt(usize, distance_str, 10);
+            }
+        } else {
+            break;
+        }
+    }
+    var count: usize = 0;
+    for (0..time + 1) |i| {
+        if (i * (time - i) > distance) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
 test "part one example" {
     const doc =
         \\Time:      7  15   30
@@ -73,6 +119,15 @@ test "part one example" {
     ;
     try std.testing.expect(try multiWays(doc) == 288);
 }
+
+test "part two example" {
+    const doc =
+        \\Time:      7  15   30
+        \\Distance:  9  40  200
+    ;
+    try std.testing.expect(try multiWaysOne(doc) == 71503);
+}
+
 // Useful stdlib functions
 const tokenizeAny = std.mem.tokenizeAny;
 const tokenizeSeq = std.mem.tokenizeSequence;
